@@ -1,78 +1,21 @@
-name: Build and Release
-
+name: Release
 on:
   push:
     tags:
-      - 'v*'  # Запускается только при пуше тегов вида v1.0.0, v0.1.0.0 и т.д.
-  workflow_dispatch:  # Возможность запустить вручную
-
-permissions:
-  contents: write
-  actions: read
-
-env:
-  BUILD_TYPE: Release
+      - 'v*'
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
-    permissions:
-      contents: write
-    
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    
-    - name: Install RPM build tools
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y rpm
-    
-    - name: Configure CMake
-      run: cmake -H. -B_build -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
-    
-    - name: Build
-      run: cmake --build _build --config ${BUILD_TYPE}
-    
-    - name: Create DEB package
-      run: |
-        cd _build
-        cpack -G "DEB" || echo "DEB package creation skipped"
-        cd ..
-    
-    - name: Create RPM package
-      run: |
-        cd _build
-        cpack -G "RPM" || echo "RPM package creation skipped"
-        cd ..
-    
-    - name: Create TGZ package
-      run: |
-        cd _build
-        cpack -G "TGZ"
-        cd ..
-    
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: linux-packages
-        path: |
-          _build/*.deb
-          _build/*.rpm
-          _build/*.tar.gz
-        if-no-files-found: warn
-    
-    - name: Create Release
-      uses: softprops/action-gh-release@v2
-      with:
-        files: |
-          _build/*.deb
-          _build/*.rpm
-          _build/*.tar.gz
-        generate_release_notes: true
-        draft: false
-        prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v3
+      - name: Configure and Build
+        run: |
+          cmake -H. -B_build -DCPACK_GENERATOR="TGZ;DEB;RPM"
+          cmake --build _build --target package
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: _build/*.deb, _build/*.rpm, _build/*.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
