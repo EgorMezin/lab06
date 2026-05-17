@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(BUILD_EXAMPLES "Build examples" OFF)
 option(BUILD_TESTS "Build tests" OFF)
 
-project(print)
+project(print VERSION 1.0.0)
 set(PRINT_VERSION_MAJOR 0)
 set(PRINT_VERSION_MINOR 1)
 set(PRINT_VERSION_PATCH 0)
